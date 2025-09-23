@@ -1,4 +1,4 @@
-#Prática 4 – DevOps / ATDD-TDD
+Prática 4 – DevOps / ATDD-TDD
 README – User Story + BDDs (Integrante 4 – Natale)
 
 Tema: Seleção de modalidade de estudo (Ao Vivo vs. EAD Gravado) para adequar a rotina do aluno.
