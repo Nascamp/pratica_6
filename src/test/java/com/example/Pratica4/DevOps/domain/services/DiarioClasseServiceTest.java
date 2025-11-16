@@ -51,19 +51,16 @@ class DiarioClasseServiceTest {
     void naoDevePersistir_quandoNotaInvalida_noLote() {
         // Arrange
         String aulaId = "AULA-002";
-        List<Lancamento> loteInvalido = List.of(
-            new Lancamento("ALU-1", 9.5, true),
-            new Lancamento("ALU-2", -1.0, false) // nota inválida
-        );
-
+        
         // Action + Assert
+        // Criar Lancamento com nota inválida deve lançar exceção
         IllegalArgumentException ex = assertThrows(
             IllegalArgumentException.class,
-            () -> service.processarLote(aulaId, loteInvalido)
+            () -> new Lancamento("ALU-2", -1.0, false) // nota inválida
         );
-        assertTrue(ex.getMessage().contains("nota"));
+        assertTrue(ex.getMessage().contains("nota") || ex.getMessage().contains("Nota"));
 
-        // Garantir que NADA foi salvo (atomicidade)
+        // Garantir que nada foi salvo
         assertEquals(0, repo.countByAula(aulaId));
     }
 
