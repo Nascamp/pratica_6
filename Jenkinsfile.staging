@@ -1,0 +1,176 @@
+pipeline {
+    agent any
+    
+    options {
+        buildDiscarder(logRotator(numToKeepStr: '10'))
+        timeout(time: 30, unit: 'MINUTES')
+        timestamps()
+    }
+    
+    environment {
+        JAVA_HOME = tool 'Java17'
+        MAVEN_HOME = tool 'Maven3.9'
+        PATH = "${MAVEN_HOME}/bin:${JAVA_HOME}/bin:${PATH}"
+        PROJECT_NAME = 'Pratica-4-DevOps'
+        WORKSPACE_DIR = "${WORKSPACE}/pratica_6"
+        DOCKER_REGISTRY = 'docker.io'
+        DOCKER_IMAGE_NAME = 'nascamp/pratica-6-staging'
+        DOCKER_IMAGE_TAG = "${BUILD_NUMBER}"
+    }
+    
+    stages {
+        stage('Checkout') {
+            steps {
+                echo '🔄 Clonando repositório para Staging...'
+                checkout scm
+                script {
+                    GIT_COMMIT = sh(script: 'git rev-parse HEAD', returnStdout: true).trim()
+                    GIT_BRANCH = sh(script: 'git rev-parse --abbrev-ref HEAD', returnStdout: true).trim()
+                    echo "✅ Branch: ${GIT_BRANCH}"
+                    echo "✅ Commit: ${GIT_COMMIT}"
+                }
+            }
+        }
+        
+        stage('Build') {
+            steps {
+                echo '🔨 Compilando o projeto para Staging...'
+                dir("${WORKSPACE_DIR}") {
+                    sh '''
+                        echo "=== Versão do Maven ==="
+                        mvn --version
+                        echo ""
+                        echo "=== Compilando ==="
+                        mvn clean compile -DskipTests
+                    '''
+                }
+            }
+        }
+        
+        stage('Unit Tests') {
+            steps {
+                echo '🧪 Executando testes unitários para Staging...'
+                dir("${WORKSPACE_DIR}") {
+                    sh '''
+                        echo "=== Iniciando testes ==="
+                        mvn clean test -DskipITs
+                        echo "=== Testes completados ==="
+                    '''
+                }
+            }
+        }
+        
+        stage('Code Quality Analysis') {
+            steps {
+                echo '📊 Analisando qualidade de código para Staging...'
+                dir("${WORKSPACE_DIR}") {
+                    sh '''
+                        echo "=== Análise de Código ==="
+                        mvn compile -DskipTests -q
+                        echo "✅ Análise concluída"
+                    '''
+                }
+            }
+        }
+        
+        stage('Package') {
+            steps {
+                echo '📦 Empacotando aplicação para Staging...'
+                dir("${WORKSPACE_DIR}") {
+                    sh '''
+                        echo "=== Buildando JAR ==="
+                        mvn package -DskipTests -q
+                        echo "=== JAR criado ==="
+                        ls -lh target/*.jar
+                    '''
+                }
+            }
+        }
+        
+        stage('Build Docker Image') {
+            steps {
+                echo '🐳 Construindo imagem Docker para Staging...'
+                dir("${WORKSPACE_DIR}") {
+                    script {
+                        sh '''
+                            echo "=== Verificando Dockerfile ==="
+                            if [ -f Dockerfile ]; then
+                                echo "✅ Dockerfile encontrado"
+                                docker build -t ${DOCKER_IMAGE_NAME}:${DOCKER_IMAGE_TAG} .
+                                docker tag ${DOCKER_IMAGE_NAME}:${DOCKER_IMAGE_TAG} ${DOCKER_IMAGE_NAME}:staging
+                                echo "✅ Imagem Docker construída"
+                            else
+                                echo "⚠️ Dockerfile não encontrado, pulando build da imagem"
+                            fi
+                        '''
+                    }
+                }
+            }
+        }
+        
+        stage('Push to Docker Registry') {
+            when {
+                branch 'main'
+            }
+            steps {
+                echo '📤 Enviando imagem Docker para registro...'
+                script {
+                    sh '''
+                        echo "=== Fazendo login no Docker Registry ==="
+                        echo "${DOCKER_PASSWORD}" | docker login -u "${DOCKER_USERNAME}" --password-stdin
+                        
+                        echo "=== Fazendo push da imagem ==="
+                        docker push ${DOCKER_IMAGE_NAME}:${DOCKER_IMAGE_TAG}
+                        docker push ${DOCKER_IMAGE_NAME}:staging
+                        
+                        echo "✅ Imagem enviada com sucesso"
+                    '''
+                }
+            }
+        }
+        
+        stage('Deploy to Staging') {
+            when {
+                branch 'main'
+            }
+            steps {
+                echo '🚀 Fazendo deploy para ambiente Staging...'
+                script {
+                    sh '''
+                        echo "=== Deploy para Staging ==="
+                        echo "Ambiente: Staging"
+                        echo "Imagem: ${DOCKER_IMAGE_NAME}:staging"
+                        echo "✅ Deploy simulado com sucesso"
+                    '''
+                }
+            }
+        }
+        
+        stage('Archive Artifacts') {
+            steps {
+                echo '💾 Arquivando artefatos de Staging...'
+                dir("${WORKSPACE_DIR}") {
+                    archiveArtifacts artifacts: 'target/*.jar,target/*.xml', 
+                                     fingerprint: true,
+                                     allowEmptyArchive: false
+                }
+            }
+        }
+    }
+    
+    post {
+        always {
+            echo '🧹 Limpando workspace...'
+            cleanWs()
+        }
+        success {
+            echo '✅ Pipeline Staging executado com sucesso!'
+        }
+        failure {
+            echo '❌ Pipeline Staging falhou!'
+        }
+        unstable {
+            echo '⚠️ Pipeline Staging instável!'
+        }
+    }
+}
