@@ -1,0 +1,62 @@
+pipeline {
+  agent any
+
+  parameters {
+    string(name: 'IMAGE_TAG', defaultValue: 'latest', description: 'Tag da imagem Docker')
+  }
+
+  stages {
+    stage('Pull image') {
+      steps {
+        script {
+          // withCredentials([usernamePassword(credentialsId: 'dockerhub', usernameVariable: 'DOCKER_USER', passwordVariable: 'DOCKER_PASS')]) {
+          //   bat "echo %DOCKER_PASS% | docker login -u %DOCKER_USER% --password-stdin"
+          // }
+
+          def image = "darlananan/pratica4:${params.IMAGE_TAG}"
+          echo "Pulling image: ${image}"
+          bat "docker pull ${image}"
+        }
+      }
+    }
+
+    stage('Stop previous container') {
+      steps {
+        bat '''
+          echo Parando container anterior (se existir)...
+          docker rm -f pratica4_staging || echo "container nao existe"
+        '''
+      }
+    }
+
+    stage('Run container') {
+      steps {
+        script {
+          def image = "darlananan/pratica4:${params.IMAGE_TAG}"
+          echo "Running container from ${image} mapping host:8081 -> container:8080"
+          // Use -d para rodar em background
+          bat "docker run -d --name pratica4_staging -p 8081:8080 ${image}"
+        }
+      }
+    }
+
+    stage('Smoke test') {
+      steps {
+        // Aguarda 3s para a app subir; aumente se necessário
+        bat 'ping -n 3 127.0.0.1 >nul'
+        // Testa health endpoint; se falhar, o step retorna código != 0 e o stage falha
+        // Ajuste o endpoint conforme sua aplicação (por ex: /actuator/health)
+        bat 'curl -f http://localhost:8081 || (echo "Smoke test falhou" & exit 1)'
+      }
+    }
+  }
+
+  post {
+    success {
+      echo "Deploy em Staging finalizado com sucesso - imagem: ${params.IMAGE_TAG}"
+    }
+    failure {
+      echo "Deploy em Staging falhou"
+    }
+  }
+}
