@@ -1,0 +1,14 @@
+version: '3.8'
+services:
+  app:
+    build: .
+    ports:
+      - "8080:8080"
+    environment:
+      - SPRING_PROFILES_ACTIVE=dev
+    depends_on: []
+  db:
+    image: "h2:1.4"
+    ports:
+      - "9092:9092"
+    command: ""

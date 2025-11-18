@@ -1,7 +1,5 @@
 package com.example.Pratica4.DevOps.domain.aggregates;
 
-import java.util.List;
-
 /**
  * Value Object: PainelDesempenho
  * Representa o resultado agregado da análise de cursos.

@@ -3,7 +3,6 @@ package com.example.Pratica4.DevOps.domain.services;
 import org.junit.jupiter.api.Test;
 import com.example.Pratica4.DevOps.domain.entities.Curso;
 import com.example.Pratica4.DevOps.domain.valueobjects.Modalidade;
-import com.example.Pratica4.DevOps.domain.aggregates.PainelDesempenho;
 
 import java.util.List;
 import java.util.stream.Collectors;
