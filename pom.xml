@@ -2,6 +2,7 @@
          xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance"
          xsi:schemaLocation="http://maven.apache.org/POM/4.0.0 https://maven.apache.org/xsd/maven-4.0.0.xsd">
     <modelVersion>4.0.0</modelVersion>
+
     <groupId>com.example</groupId>
     <artifactId>Pratica-4-DevOps</artifactId>
     <version>1.0.0</version>
@@ -48,11 +49,11 @@
             <version>2.1.0</version>
         </dependency>
 
-        <!-- Lombok (provided) - required for entities/DTO getters/setters generation -->
+        <!-- Lombok (usado em tempo de compilação) -->
         <dependency>
             <groupId>org.projectlombok</groupId>
             <artifactId>lombok</artifactId>
-            <version>1.18.30</version>
+            <version>1.18.34</version>
             <scope>provided</scope>
         </dependency>
 
@@ -63,7 +64,7 @@
             <scope>test</scope>
         </dependency>
 
-        <!-- Mockito (already included in starter-test) but explicit for clarity -->
+        <!-- Mockito (já vem no starter-test, mas ok deixar explícito) -->
         <dependency>
             <groupId>org.mockito</groupId>
             <artifactId>mockito-core</artifactId>
@@ -85,19 +86,21 @@
                 </configuration>
             </plugin>
 
-            <!-- Maven Compiler Plugin (enable annotation processing and use project Lombok) -->
+            <!-- Maven Compiler Plugin (Lombok + Java 17) -->
             <plugin>
                 <groupId>org.apache.maven.plugins</groupId>
                 <artifactId>maven-compiler-plugin</artifactId>
-                <version>3.10.1</version>
+                <version>3.11.0</version>
                 <configuration>
-                    <fork>true</fork>
+                    <source>${java.version}</source>
+                    <target>${java.version}</target>
                     <encoding>UTF-8</encoding>
+                    <fork>true</fork>
                     <annotationProcessorPaths>
                         <path>
                             <groupId>org.projectlombok</groupId>
                             <artifactId>lombok</artifactId>
-                            <version>1.18.30</version>
+                            <version>1.18.34</version>
                         </path>
                     </annotationProcessorPaths>
                 </configuration>
@@ -118,7 +121,7 @@
                 </configuration>
             </plugin>
 
-            <!-- JaCoCo for coverage (prepare-agent + report). The strict check is activated via profile 'ci' -->
+            <!-- JaCoCo para cobertura -->
             <plugin>
                 <groupId>org.jacoco</groupId>
                 <artifactId>jacoco-maven-plugin</artifactId>
@@ -140,7 +143,7 @@
                 </executions>
             </plugin>
 
-            <!-- PMD plugin (static analysis) -->
+            <!-- PMD plugin (análise estática) -->
             <plugin>
                 <groupId>org.apache.maven.plugins</groupId>
                 <artifactId>maven-pmd-plugin</artifactId>
@@ -154,7 +157,7 @@
     </build>
 
     <profiles>
-        <!-- CI profile: enables strict coverage check (99% minimum) -->
+        <!-- CI profile: valida cobertura mínimo 99% -->
         <profile>
             <id>ci</id>
             <build>
