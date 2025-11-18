@@ -48,7 +48,7 @@
             <version>2.1.0</version>
         </dependency>
 
-        <!-- Lombok for DTOs / Entities / Value Objects -->
+        <!-- Lombok (provided) - required for entities/DTO getters/setters generation -->
         <dependency>
             <groupId>org.projectlombok</groupId>
             <artifactId>lombok</artifactId>
@@ -79,16 +79,20 @@
                 <groupId>org.springframework.boot</groupId>
                 <artifactId>spring-boot-maven-plugin</artifactId>
                 <configuration>
-                    <layers>false</layers>
+                    <layers>
+                        <enabled>false</enabled>
+                    </layers>
                 </configuration>
             </plugin>
 
-            <!-- Ensure annotation processors (Lombok) are available during compilation -->
+            <!-- Maven Compiler Plugin (enable annotation processing and use project Lombok) -->
             <plugin>
                 <groupId>org.apache.maven.plugins</groupId>
                 <artifactId>maven-compiler-plugin</artifactId>
                 <version>3.10.1</version>
                 <configuration>
+                    <fork>true</fork>
+                    <encoding>UTF-8</encoding>
                     <annotationProcessorPaths>
                         <path>
                             <groupId>org.projectlombok</groupId>
@@ -96,10 +100,6 @@
                             <version>1.18.30</version>
                         </path>
                     </annotationProcessorPaths>
-                    <fork>true</fork>
-                    <compilerArgs>
-                        <!-- Ensure consistent encoding and parameters for Java 17 -->
-                    </compilerArgs>
                 </configuration>
             </plugin>
 
